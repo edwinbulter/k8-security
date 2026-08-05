@@ -37,6 +37,7 @@ Om applicaties (`app1` en `app2`) taalonafhankelijk en centraal te beveiligen, i
 * **Ontkoppeling van Applicatie-code:** Doordat de proxy als centrale Security Gateway alle OIDC-logica en token-afhandeling overneemt, hoeven onze backend-applicaties (zoals Java/Quarkus of Node.js) zelf **geen** ingewikkelde inlogcode te bevatten. De gateway laat alleen legitiem verkeer door.
 * **BFF-Header Injectie:** Zodra een verzoek via de cookie is goedgekeurd, vist de BFF-gateway het JWT-token intern weer uit de cookie. De proxy injecteert dit token vervolgens als een schone HTTP-header (`X-Auth-Request-Access-Token`) naar de achterliggende backend-app, zodat de applicatie direct weet welke specifieke gebruiker er binnenkomt.
 
+> Let op: dit pattern is niet geschikt voor Android Apps omdat Android WebView vaak de session cookies kwijt raakt en daarom wordt uitgelogd: Gebruik in dat geval JWT tokens in combinatie met de `Android Keystore / Secure Storage`
 ---
 
 ## ⚙️ Essentiële SSO & Productie Instellingen
