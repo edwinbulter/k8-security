@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openldap
+  labels:
+    app: openldap
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: openldap
+  template:
+    metadata:
+      labels:
+        app: openldap
+    spec:
+      containers:
+        - name: openldap
+          image: osixia/openldap:1.5.0
+          ports:
+            - containerPort: 389
+              name: ldap
+          env:
+            - name: LDAP_ORGANISATION
+              value: "NEDCAR"
+            - name: LDAP_DOMAIN
+              value: "nedcar.nl"
+            - name: LDAP_ADMIN_PASSWORD
+              value: "adminpassword"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: openldap
+spec:
+  ports:
+    - port: 389
+      targetPort: 389
+      name: ldap
+  selector:
+    app: openldap

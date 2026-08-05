@@ -1,0 +1,139 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app1
+  namespace: keycloak-sso-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app1
+  template:
+    metadata:
+      labels:
+        app: app1
+    spec:
+      containers:
+        - name: oauth2-proxy
+          image: quay.io/oauth2-proxy/oauth2-proxy:v7.6.0
+          args:
+            - --provider=oidc
+            - --client-id=oauth2-proxy-app1
+            - --client-secret=wmExZuhl0cp0XcQek1dYwMrSPtvwZ6Qw
+            - --skip-oidc-discovery=false
+            - --insecure-oidc-skip-issuer-verification=true
+            - --prompt=select_account
+            - --skip-provider-button=true
+            - --set-xauthrequest=true
+            - --oidc-issuer-url=http://keycloak.keycloak-sso-demo.svc.cluster.local:8080/realms/DemoRealm
+            - --upstream=http://backend-app1-service.keycloak-sso-demo.svc.cluster.local:80
+            - --proxy-websockets=false
+            - --http-address=0.0.0.0:4180
+            - --redirect-url=http://app1.local/oauth2/callback
+            - --cookie-name=_oauth2_proxy_app1
+            - --cookie-secret=YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoxMjM0NTY=
+            - --cookie-domain=app1.local
+            - --cookie-secure=false
+            - --email-domain=*
+          ports:
+            - containerPort: 4180
+              name: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app1
+  namespace: keycloak-sso-demo
+spec:
+  ports:
+    - port: 4180
+      targetPort: 4180
+  selector:
+    app: app1
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app2
+  namespace: keycloak-sso-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app2
+  template:
+    metadata:
+      labels:
+        app: app2
+    spec:
+      containers:
+        - name: oauth2-proxy
+          image: quay.io/oauth2-proxy/oauth2-proxy:v7.6.0
+          args:
+            - --provider=oidc
+            - --client-id=oauth2-proxy-app2
+            - --client-secret=e22lzsBoyjaAhJnvDwPffrbuEuGCgm7R
+            - --skip-oidc-discovery=false
+            - --insecure-oidc-skip-issuer-verification=true
+            - --prompt=select_account
+            - --skip-provider-button=true
+            - --set-xauthrequest=true
+            - --oidc-issuer-url=http://keycloak.keycloak-sso-demo.svc.cluster.local:8080/realms/DemoRealm
+            - --upstream=http://backend-app2-service.keycloak-sso-demo.svc.cluster.local:80
+            - --proxy-websockets=false
+            - --http-address=0.0.0.0:4180
+            - --redirect-url=http://app2.local/oauth2/callback
+            - --cookie-name=_oauth2_proxy_app2
+            - --cookie-secret=YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoxMjM0NTY=
+            - --cookie-domain=app2.local
+            - --cookie-secure=false
+            - --email-domain=*
+          ports:
+            - containerPort: 4180
+              name: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app2
+  namespace: keycloak-sso-demo
+spec:
+  ports:
+    - port: 4180
+      targetPort: 4180
+  selector:
+    app: app2
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: webapps-ingress
+  namespace: keycloak-sso-demo
+  annotations:
+    # CRUCIAAL: Verhoog de buffers om de grote Keycloak-cookies te kunnen verwerken
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
+    nginx.ingress.kubernetes.io/proxy-buffers: "4 16k"
+    nginx.ingress.kubernetes.io/proxy-busy-buffers-size: "24k"
+    nginx.ingress.kubernetes.io/proxy-header-buffer-size: "16k"
+spec:
+  rules:
+    - host: app1.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: app1
+                port:
+                  number: 4180
+    - host: app2.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: app2
+                port:
+                  number: 4180

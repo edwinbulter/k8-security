@@ -1,0 +1,8 @@
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: mesh-demo-strict-mtls
+  namespace: mesh-demo
+spec:
+  mtls:
+    mode: STRICT

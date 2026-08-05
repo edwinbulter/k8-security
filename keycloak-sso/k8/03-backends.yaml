@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-app1
+  namespace: keycloak-sso-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend-app1
+  template:
+    metadata:
+      labels:
+        app: backend-app1
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:alpine
+          command: ["/bin/sh", "-c", "echo '<h1>Welkom in App 1</h1>' > /usr/share/nginx/html/index.html && nginx -g 'daemon off;'"]
+          ports:
+            - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-app1-service
+  namespace: keycloak-sso-demo
+spec:
+  ports:
+    - port: 80
+      targetPort: 80
+  selector:
+    app: backend-app1
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-app2
+  namespace: keycloak-sso-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend-app2
+  template:
+    metadata:
+      labels:
+        app: backend-app2
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:alpine
+          command: ["/bin/sh", "-c", "echo '<h1>Welkom in App 2</h1>' > /usr/share/nginx/html/index.html && nginx -g 'daemon off;'"]
+          ports:
+            - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-app2-service
+  namespace: keycloak-sso-demo
+spec:
+  ports:
+    - port: 80
+      targetPort: 80
+  selector:
+    app: backend-app2
