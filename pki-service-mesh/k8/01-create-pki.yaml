@@ -1,0 +1,24 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: lokale-pki-issuer
+  namespace: pki-demo
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: pki-demo-root-ca
+  namespace: pki-demo
+spec:
+  isCA: true
+  commonName: pki-demo-root-ca
+  secretName: lokale-pki-ca-secret
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  issuerRef:
+    name: lokale-pki-issuer
+    kind: Issuer
+
