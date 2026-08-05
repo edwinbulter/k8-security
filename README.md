@@ -1,12 +1,12 @@
 # Security Platform: Zero-Trust Architectuur PoC
 
-Dit project bevat twee onafhankelijke Proof of Concepts (PoCs) die samen de basis vormen voor een gelaagde beveiligingsarchitectuur binnen Kubernetes.
+Dit project bevat drie onafhankelijke Proof of Concepts (PoCs) die samen de basis vormen voor een gelaagde beveiligingsarchitectuur binnen Kubernetes.
 
 ---
 
 ## 📂 Beschikbare Demo's
 
-Het project is opgedeeld in twee specifieke lagen:
+Het project is opgedeeld in drie specifieke lagen:
 
 1. 👤 **[User Identity & SSO Demo](./keycloak-sso/README.md)**
     * **Componenten:** Keycloak & OAuth2-Proxy (BFF-patroon).
