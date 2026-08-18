@@ -16,6 +16,7 @@ spec:
       containers:
         - name: keycloak
           image: keycloak-userprovider:latest
+          imagePullPolicy: Never
           args: ["start-dev"]
           env:
             - name: KEYCLOAK_ADMIN
@@ -27,15 +28,15 @@ spec:
             - name: KC_HOSTNAME_STRICT
               value: "false"
             - name: KC_HOSTNAME
-              value: "keycloak.local"
-            - name: QUARKUS_DATASOURCE_USER_STORE_DB_KIND
-              value: "postgresql"
-            - name: QUARKUS_DATASOURCE_USER_STORE_USERNAME
+              value: "keycloak.localhost"
+            - name: KC_DB
               value: "postgres"
-            - name: QUARKUS_DATASOURCE_USER_STORE_PASSWORD
+            - name: KC_DB_URL
+              value: "jdbc:postgresql://postgres:5432/keycloak"
+            - name: KC_DB_USERNAME
+              value: "postgres"
+            - name: KC_DB_PASSWORD
               value: "adminpassword"
-            - name: QUARKUS_DATASOURCE_USER_STORE_JDBC_URL
-              value: "jdbc:postgresql://postgres:5432/userdb"
           ports:
             - containerPort: 8080
               name: http
@@ -59,7 +60,7 @@ metadata:
   namespace: keycloak-userprovider
 spec:
   rules:
-    - host: keycloak.local
+    - host: keycloak.localhost
       http:
         paths:
           - path: /

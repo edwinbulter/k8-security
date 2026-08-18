@@ -10,6 +10,7 @@ metadata:
   namespace: keycloak-userprovider
 data:
   init.sql: |
+    CREATE DATABASE keycloak;
     CREATE DATABASE userdb;
     \c userdb;
 
@@ -51,6 +52,7 @@ spec:
       containers:
         - name: postgres
           image: postgres:15-alpine
+          args: ["postgres", "-c", "max_prepared_transactions=100"]
           env:
             - name: POSTGRES_PASSWORD
               value: "adminpassword"
