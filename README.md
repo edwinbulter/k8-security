@@ -1,12 +1,12 @@
 # Security Platform: Zero-Trust Architectuur PoC
 
-Dit project bevat drie onafhankelijke Proof of Concepts (PoCs) die samen de basis vormen voor een gelaagde beveiligingsarchitectuur binnen Kubernetes.
+Dit project bevat vier onafhankelijke Proof of Concepts (PoCs) die samen de basis vormen voor een gelaagde beveiligingsarchitectuur binnen Kubernetes.
 
 ---
 
 ## 📂 Beschikbare Demo's
 
-Het project is opgedeeld in drie specifieke lagen:
+Het project is opgedeeld in vier specifieke lagen:
 
 1. 👤 **[User Identity & SSO Demo](./keycloak-sso/README.md)**
     * **Componenten:** Keycloak & OAuth2-Proxy (BFF-patroon).
@@ -19,6 +19,10 @@ Het project is opgedeeld in drie specifieke lagen:
 3. 🔐 **[PKI-Driven Service Mesh Demo](./pki-service-mesh/README.md)**
     * **Componenten:** cert-manager (PKI) & Istio Service Mesh.
     * **Beveiligingsvraagstuk:** Organisatie-brede vertrouwensketen voor cross-cluster en hybride omgevingen. Het koppelt Istio aan een centrale PKI, waardoor certificaten herleidbaar zijn naar een overkoepelende autoriteit en systemen binnen én buiten Kubernetes elkaars mTLS-handshakes kunnen verifiëren.
+
+4. 🗄️ **[Keycloak User Storage Provider Demo](./keycloak-userprovider/README.md)**
+    * **Componenten:** Keycloak & PostgreSQL (custom JPA User Storage Provider).
+    * **Beveiligingsvraagstuk:** Federated identity — gebruikers hoeven niet in Keycloak zelf te worden aangemaakt, maar worden live uit een externe autoritatieve database gehaald. Dit demonstreert hoe Keycloak kan integreren met bestaande identiteitsbronnen binnen de organisatie.
 
 ---
 

@@ -1,0 +1,78 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: keycloak-userprovider
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init-sql
+  namespace: keycloak-userprovider
+data:
+  init.sql: |
+    CREATE DATABASE userdb;
+    \c userdb;
+
+    CREATE TABLE users (
+        id VARCHAR(255) PRIMARY KEY,
+        username VARCHAR(255) UNIQUE NOT NULL,
+        email VARCHAR(255),
+        password VARCHAR(255),
+        phone VARCHAR(255)
+    );
+
+    INSERT INTO users (id, username, email, password, phone) VALUES
+        ('a1b2c3d4-0001-4000-8000-000000000001', 'user-1',  'user-1@example.com',  'hello-user-1',  '0612345671'),
+        ('a1b2c3d4-0002-4000-8000-000000000002', 'user-2',  'user-2@example.com',  'hello-user-2',  '0612345672'),
+        ('a1b2c3d4-0003-4000-8000-000000000003', 'user-3',  'user-3@example.com',  'hello-user-3',  '0612345673'),
+        ('a1b2c3d4-0004-4000-8000-000000000004', 'user-4',  'user-4@example.com',  'hello-user-4',  '0612345674'),
+        ('a1b2c3d4-0005-4000-8000-000000000005', 'user-5',  'user-5@example.com',  'hello-user-5',  '0612345675'),
+        ('a1b2c3d4-0006-4000-8000-000000000006', 'user-6',  'user-6@example.com',  'hello-user-6',  '0612345676'),
+        ('a1b2c3d4-0007-4000-8000-000000000007', 'user-7',  'user-7@example.com',  'hello-user-7',  '0612345677'),
+        ('a1b2c3d4-0008-4000-8000-000000000008', 'user-8',  'user-8@example.com',  'hello-user-8',  '0612345678'),
+        ('a1b2c3d4-0009-4000-8000-000000000009', 'user-9',  'user-9@example.com',  'hello-user-9',  '0612345679'),
+        ('a1b2c3d4-0010-4000-8000-000000000010', 'user-10', 'user-10@example.com', 'hello-user-10', '0612345670');
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: keycloak-userprovider
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15-alpine
+          env:
+            - name: POSTGRES_PASSWORD
+              value: "adminpassword"
+          ports:
+            - containerPort: 5432
+              name: postgres
+          volumeMounts:
+            - name: init-sql
+              mountPath: /docker-entrypoint-initdb.d
+      volumes:
+        - name: init-sql
+          configMap:
+            name: postgres-init-sql
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: keycloak-userprovider
+spec:
+  ports:
+    - port: 5432
+      targetPort: 5432
+  selector:
+    app: postgres

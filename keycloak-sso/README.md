@@ -77,7 +77,7 @@ In grootschalige productieomgevingen draait exact deze opstelling. Bij extreem h
 Wil je deze complete SSO-omgeving stap-voor-stap zelf lokaal opzetten in een Kubernetes cluster?
 
 Volg de volledige installatie-, configuratie- en instructiehandleiding in:
-👉 **[doc/01-setup-keycloak-sso-demo.md](doc/01-setup-keycloak-sso-demo)**
+👉 **[doc/01-setup-keycloak-sso-demo.md](doc/01-setup-keycloak-sso-demo.md)**
 
 Volg deze handleiding om Keycloak users uit LDAP te laten lezen:
 👉 **[doc/02-add-ldap-integration.md](doc/02-add-ldap-integration.md)**
