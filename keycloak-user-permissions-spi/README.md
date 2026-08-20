@@ -4,7 +4,11 @@ Dit project demonstreert een custom **Keycloak Protocol Mapper** die permissions
 
 Daarnaast bevat het twee **Node.js Express** web clients die via OIDC authenticeren en de permissions uit het JWT token tonen. SSO werkt automatisch omdat beide clients in dezelfde Keycloak realm zitten.
 
-Voor een beter begrip is het aan te raden om eerst [Server development - User Storage SPI](https://www.keycloak.org/docs/latest/server_development/index.html#_user-storage-spi) te lezen.
+Voor een beter begrip is het aanbevolen om eerst [Server development - User Storage SPI](https://www.keycloak.org/docs/latest/server_development/index.html#_user-storage-spi) te lezen.
+
+## Implementatie
+
+De `PermissionProtocolMapper` is geimplementeerd volgens het standaard Keycloak patroon voor Protocol Mappers. Voor de implementatie is gekeken naar de broncode van Keycloak zelf, specifiek de implementaties van `AbstractOIDCProtocolMapper` in de Keycloak sources: https://github.com/keycloak/keycloak (zie `services/src/main/java/org/keycloak/protocol/oidc/mappers/`).
 
 ## Architectuur
 
