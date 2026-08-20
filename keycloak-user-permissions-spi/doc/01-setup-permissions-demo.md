@@ -167,7 +167,7 @@ CLIENT_A_ID=$(curl -s "http://keycloak-permissions.localhost/admin/realms/Permis
 curl -s -X POST "http://keycloak-permissions.localhost/admin/realms/PermissionsRealm/clients/$CLIENT_A_ID/protocol-mappers/models" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"name":"permissions","protocol":"openid-connect","protocolMapper":"permission-protocol-mapper","config":{"permissions":"permissions","included.in.access.token":"true","included.in.id.token":"true"}}'
+  -d '{"name":"permissions","protocol":"openid-connect","protocolMapper":"permission-protocol-mapper","config":{"claim.name":"permissions","access.token.claim":"true","id.token.claim":"true","multivalued":"true"}}'
 
 # Voeg Permission Mapper toe aan client-b
 CLIENT_B_ID=$(curl -s "http://keycloak-permissions.localhost/admin/realms/PermissionsRealm/clients?clientId=client-b" \
@@ -176,7 +176,7 @@ CLIENT_B_ID=$(curl -s "http://keycloak-permissions.localhost/admin/realms/Permis
 curl -s -X POST "http://keycloak-permissions.localhost/admin/realms/PermissionsRealm/clients/$CLIENT_B_ID/protocol-mappers/models" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"name":"permissions","protocol":"openid-connect","protocolMapper":"permission-protocol-mapper","config":{"permissions":"permissions","included.in.access.token":"true","included.in.id.token":"true"}}'
+  -d '{"name":"permissions","protocol":"openid-connect","protocolMapper":"permission-protocol-mapper","config":{"claim.name":"permissions","access.token.claim":"true","id.token.claim":"true","multivalued":"true"}}'
 ```
 
 **Verifieer dat de mappers zijn toegevoegd:**

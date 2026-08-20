@@ -8,9 +8,10 @@ import org.keycloak.models.ProtocolMapperModel;
 import org.keycloak.models.UserSessionModel;
 import org.keycloak.protocol.oidc.mappers.AbstractOIDCProtocolMapper;
 import org.keycloak.protocol.oidc.mappers.OIDCAccessTokenMapper;
+import org.keycloak.protocol.oidc.mappers.OIDCAttributeMapperHelper;
 import org.keycloak.protocol.oidc.mappers.OIDCIDTokenMapper;
+import org.keycloak.protocol.ProtocolMapperUtils;
 import org.keycloak.provider.ProviderConfigProperty;
-import org.keycloak.representations.AccessToken;
 import org.keycloak.representations.IDToken;
 import org.keycloak.storage.StorageId;
 
@@ -29,13 +30,16 @@ public class PermissionProtocolMapper extends AbstractOIDCProtocolMapper
     private static final List<ProviderConfigProperty> configProperties = new ArrayList<>();
 
     static {
-        ProviderConfigProperty property = new ProviderConfigProperty();
-        property.setName(CLAIM_NAME);
-        property.setLabel("Token Claim Name");
-        property.setType(ProviderConfigProperty.STRING_TYPE);
-        property.setDefaultValue(CLAIM_NAME);
-        property.setHelpText("Name of the claim to insert into the token");
-        configProperties.add(property);
+        OIDCAttributeMapperHelper.addTokenClaimNameConfig(configProperties);
+        OIDCAttributeMapperHelper.addIncludeInTokensConfig(configProperties, PermissionProtocolMapper.class);
+
+        ProviderConfigProperty multivalued = new ProviderConfigProperty();
+        multivalued.setName(ProtocolMapperUtils.MULTIVALUED);
+        multivalued.setLabel(ProtocolMapperUtils.MULTIVALUED_LABEL);
+        multivalued.setHelpText(ProtocolMapperUtils.MULTIVALUED_HELP_TEXT);
+        multivalued.setType(ProviderConfigProperty.BOOLEAN_TYPE);
+        multivalued.setDefaultValue("true");
+        configProperties.add(multivalued);
     }
 
     @Override
@@ -64,27 +68,11 @@ public class PermissionProtocolMapper extends AbstractOIDCProtocolMapper
     }
 
     @Override
-    public AccessToken transformAccessToken(AccessToken token, ProtocolMapperModel mappingModel,
-                                            KeycloakSession keycloakSession, UserSessionModel userSession,
-                                            ClientSessionContext clientSessionCtx) {
-        logger.info("PermissionProtocolMapper: transformAccessToken for user " + userSession.getUser().getUsername());
-        setPermissionsClaim(token, mappingModel, userSession, keycloakSession);
-        return token;
-    }
-
-    @Override
-    public IDToken transformIDToken(IDToken token, ProtocolMapperModel mappingModel,
-                                    KeycloakSession keycloakSession, UserSessionModel userSession,
-                                    ClientSessionContext clientSessionCtx) {
-        logger.info("PermissionProtocolMapper: transformIDToken for user " + userSession.getUser().getUsername());
-        setPermissionsClaim(token, mappingModel, userSession, keycloakSession);
-        return token;
-    }
-
-    private void setPermissionsClaim(IDToken token, ProtocolMapperModel mappingModel,
-                                     UserSessionModel userSession, KeycloakSession keycloakSession) {
+    protected void setClaim(IDToken token, ProtocolMapperModel mappingModel,
+                            UserSessionModel userSession, KeycloakSession keycloakSession,
+                            ClientSessionContext clientSessionCtx) {
         String externalId = StorageId.externalId(userSession.getUser().getId());
-        logger.info("External user ID: " + externalId);
+        logger.info("PermissionProtocolMapper: setClaim for user " + userSession.getUser().getUsername() + ", external ID: " + externalId);
 
         EntityManager em = keycloakSession
                 .getProvider(JpaConnectionProvider.class, "user-store")
@@ -102,8 +90,7 @@ public class PermissionProtocolMapper extends AbstractOIDCProtocolMapper
 
         logger.info("Found permissions: " + permissions);
 
-        String claimName = mappingModel.getConfig().getOrDefault(CLAIM_NAME, CLAIM_NAME);
-        token.getOtherClaims().put(claimName, permissions);
+        OIDCAttributeMapperHelper.mapClaim(token, mappingModel, permissions);
     }
 
 }
