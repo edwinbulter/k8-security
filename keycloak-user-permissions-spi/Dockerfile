@@ -22,7 +22,7 @@ RUN cd mapper && mvn clean package -DskipTests
 FROM quay.io/keycloak/keycloak:24.0.0
 
 # Copy both JARs into the Keycloak providers directory
-COPY --from=builder /build/provider/target/user-storage-jpa-example.jar /opt/keycloak/providers/
+COPY --from=builder /build/provider/target/permissions-spi-user-storage.jar /opt/keycloak/providers/
 COPY --from=builder /build/mapper/target/permission-protocol-mapper.jar /opt/keycloak/providers/
 
 # Configure custom datasource for User Storage Provider

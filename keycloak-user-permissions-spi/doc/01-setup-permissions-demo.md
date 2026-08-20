@@ -115,7 +115,7 @@ kubectl get pods -n keycloak-permissions -l app=web-client-b
 
 ### 6.2 User Storage Provider toevoegen
 4. Ga naar **User Federation**.
-5. Klik **Add provider** → selecteer **`example-user-storage-jpa`**.
+5. Klik **Add provider** → selecteer **`example-user-permissions-jpa`**.
 6. Klik **Save**.
 
 ### 6.3 Clients aanmaken
@@ -124,35 +124,69 @@ kubectl get pods -n keycloak-permissions -l app=web-client-b
 7. Ga naar **Clients** → **Create client**.
    - Client ID: `client-a`
    - Naam: `Web Client A`
-   - Klik **Next** → **Next** → **Create**
-8. Ga naar **Access settings**:
+   - Klik **Next**
+8. Op de **Capability config** pagina:
+   - Zet **Client authentication** aan (naar "Confidential access")
+   - Klik **Next**
+9. Op de **Login and logout** pagina:
    - **Valid redirect URIs**: `http://client-a.localhost/*`
    - **Valid post logout redirect URIs**: `http://client-a.localhost/*`
    - **Web origins**: `http://client-a.localhost`
-9. Ga naar **Credentials** tab → kopieer het **Client secret**.
-10. Update het secret in het Kubernetes manifest als het afwijkt van `client-a-secret`:
+   - Klik **Save**
+10. Ga naar de **Credentials** tab → kopieer het **Client secret**.
+11. Update het secret in het Kubernetes manifest als het afwijkt van `client-a-secret`:
     ```bash
     kubectl set env deployment/web-client-a CLIENT_SECRET=<jouw-secret> -n keycloak-permissions
     kubectl rollout restart deployment/web-client-a -n keycloak-permissions
     ```
 
 **Client B:**
-11. Herhaal stappen 7-10 voor `client-b` met:
+12. Herhaal stappen 7-11 voor `client-b` met:
     - Client ID: `client-b`
     - Redirect URIs: `http://client-b.localhost/*`
     - Secret: `client-b-secret`
 
 ### 6.4 Permission Protocol Mapper toevoegen
 
-Voor beide clients:
+In Keycloak 24 is de "Add mapper" knop niet zichtbaar in de Client scopes UI. Gebruik de Admin REST API om de mapper toe te voegen.
 
-12. Ga naar **Clients** → `client-a` → **Client scopes** tab.
-13. Klik **Add mapper** → **By configuration** → selecteer **Permission Mapper**.
-14. Laat de instellingen op hun standaardwaarden (claim name: `permissions`).
-15. Klik **Save**.
-16. Herhaal voor `client-b`.
+**Voer uit in een terminal:**
 
-> De **Permission Mapper** verschijnt in de lijst omdat de custom Protocol Mapper JAR in de Keycloak image zit.
+```bash
+# Haal admin token op
+TOKEN=$(curl -s http://keycloak-permissions.localhost/realms/master/protocol/openid-connect/token \
+  -d "client_id=admin-cli" \
+  -d "username=admin" \
+  -d "password=adminpassword" \
+  -d "grant_type=password" | jq -r '.access_token')
+
+# Voeg Permission Mapper toe aan client-a
+CLIENT_A_ID=$(curl -s "http://keycloak-permissions.localhost/admin/realms/PermissionsRealm/clients?clientId=client-a" \
+  -H "Authorization: Bearer $TOKEN" | jq -r '.[0].id')
+
+curl -s -X POST "http://keycloak-permissions.localhost/admin/realms/PermissionsRealm/clients/$CLIENT_A_ID/protocol-mappers/models" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"permissions","protocol":"openid-connect","protocolMapper":"permission-protocol-mapper","config":{"permissions":"permissions","included.in.access.token":"true","included.in.id.token":"true"}}'
+
+# Voeg Permission Mapper toe aan client-b
+CLIENT_B_ID=$(curl -s "http://keycloak-permissions.localhost/admin/realms/PermissionsRealm/clients?clientId=client-b" \
+  -H "Authorization: Bearer $TOKEN" | jq -r '.[0].id')
+
+curl -s -X POST "http://keycloak-permissions.localhost/admin/realms/PermissionsRealm/clients/$CLIENT_B_ID/protocol-mappers/models" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"permissions","protocol":"openid-connect","protocolMapper":"permission-protocol-mapper","config":{"permissions":"permissions","included.in.access.token":"true","included.in.id.token":"true"}}'
+```
+
+**Verifieer dat de mappers zijn toegevoegd:**
+
+```bash
+curl -s "http://keycloak-permissions.localhost/admin/realms/PermissionsRealm/clients/$CLIENT_A_ID/protocol-mappers/models" \
+  -H "Authorization: Bearer $TOKEN" | jq .
+```
+
+Je zou een mapper met `"protocolMapper": "permission-protocol-mapper"` moeten zien.
 
 ### 6.5 Federated users verifiëren
 

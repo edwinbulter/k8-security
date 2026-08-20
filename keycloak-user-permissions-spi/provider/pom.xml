@@ -3,10 +3,10 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.keycloak.quickstarts</groupId>
-    <artifactId>keycloak-user-storage-jpa</artifactId>
+    <artifactId>permissions-spi-user-storage</artifactId>
     <version>1.0.0</version>
     <packaging>jar</packaging>
-    <name>Keycloak User Storage Provider with JPA (PostgreSQL)</name>
+    <name>Permissions SPI - User Storage Provider (PostgreSQL)</name>
     <description>User Storage Provider that reads users from a PostgreSQL database</description>
 
     <properties>
@@ -50,7 +50,7 @@
     </dependencies>
 
     <build>
-        <finalName>user-storage-jpa-example</finalName>
+        <finalName>permissions-spi-user-storage</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

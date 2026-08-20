@@ -1,1 +1,1 @@
-org.keycloak.quickstart.protocol.mapper.PermissionProtocolMapperFactory
+org.keycloak.quickstart.protocol.mapper.PermissionProtocolMapper

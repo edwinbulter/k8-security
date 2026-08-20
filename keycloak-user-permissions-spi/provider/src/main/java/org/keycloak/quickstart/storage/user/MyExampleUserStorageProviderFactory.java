@@ -7,7 +7,7 @@ import org.keycloak.storage.UserStorageProviderFactory;
 
 public class MyExampleUserStorageProviderFactory implements UserStorageProviderFactory<MyUserStorageProvider> {
 
-    public static final String PROVIDER_ID = "example-user-storage-jpa";
+    public static final String PROVIDER_ID = "example-user-permissions-jpa";
 
     private static final Logger logger = Logger.getLogger(MyExampleUserStorageProviderFactory.class);
 

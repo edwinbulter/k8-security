@@ -7,6 +7,7 @@ const CLIENT_NAME = process.env.CLIENT_NAME || 'Web Client';
 const CLIENT_ID = process.env.CLIENT_ID || 'client-a';
 const CLIENT_SECRET = process.env.CLIENT_SECRET || 'client-secret';
 const KEYCLOAK_URL = process.env.KEYCLOAK_URL || 'http://keycloak-permissions.localhost';
+const KEYCLOAK_INTERNAL_URL = process.env.KEYCLOAK_INTERNAL_URL || KEYCLOAK_URL;
 const REALM = process.env.REALM || 'PermissionsRealm';
 const REDIRECT_URI = process.env.REDIRECT_URI || `http://${process.env.HOST || 'localhost'}/callback`;
 
@@ -17,7 +18,7 @@ let codeVerifier = generators.codeVerifier();
 let codeChallenge = generators.codeChallenge(codeVerifier);
 
 async function initClient() {
-    const issuer = await Issuer.discover(`${KEYCLOAK_URL}/realms/${REALM}`);
+    const issuer = await Issuer.discover(`${KEYCLOAK_INTERNAL_URL}/realms/${REALM}`);
     client = new issuer.Client({
         client_id: CLIENT_ID,
         client_secret: CLIENT_SECRET,

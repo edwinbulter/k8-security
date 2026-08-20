@@ -28,6 +28,8 @@ spec:
               value: "client-a-secret"
             - name: KEYCLOAK_URL
               value: "http://keycloak-permissions.localhost"
+            - name: KEYCLOAK_INTERNAL_URL
+              value: "http://keycloak:8080"
             - name: REALM
               value: "PermissionsRealm"
             - name: REDIRECT_URI
@@ -96,6 +98,8 @@ spec:
               value: "client-b-secret"
             - name: KEYCLOAK_URL
               value: "http://keycloak-permissions.localhost"
+            - name: KEYCLOAK_INTERNAL_URL
+              value: "http://keycloak:8080"
             - name: REALM
               value: "PermissionsRealm"
             - name: REDIRECT_URI
