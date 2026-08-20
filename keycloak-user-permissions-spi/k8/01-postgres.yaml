@@ -1,0 +1,192 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: keycloak-permissions
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init-sql
+  namespace: keycloak-permissions
+data:
+  init.sql: |
+    CREATE DATABASE keycloak;
+    CREATE DATABASE userdb;
+    \c userdb;
+
+    CREATE TABLE users (
+        id VARCHAR(255) PRIMARY KEY,
+        username VARCHAR(255) UNIQUE NOT NULL,
+        email VARCHAR(255),
+        password VARCHAR(255),
+        phone VARCHAR(255)
+    );
+
+    CREATE TABLE roles (
+        id VARCHAR(36) PRIMARY KEY,
+        name VARCHAR(50) NOT NULL UNIQUE
+    );
+
+    CREATE TABLE permissions (
+        id VARCHAR(36) PRIMARY KEY,
+        name VARCHAR(50) NOT NULL UNIQUE
+    );
+
+    CREATE TABLE role_permissions (
+        role_id VARCHAR(36) REFERENCES roles(id),
+        permission_id VARCHAR(36) REFERENCES permissions(id),
+        PRIMARY KEY (role_id, permission_id)
+    );
+
+    CREATE TABLE user_roles (
+        user_id VARCHAR(255) REFERENCES users(id),
+        role_id VARCHAR(36) REFERENCES roles(id),
+        PRIMARY KEY (user_id, role_id)
+    );
+
+    -- Users
+    INSERT INTO users (id, username, email, password, phone) VALUES
+        ('a1b2c3d4-0001-4000-8000-000000000001', 'user-1',  'user-1@example.com',  'hello-user-1',  '0612345671'),
+        ('a1b2c3d4-0002-4000-8000-000000000002', 'user-2',  'user-2@example.com',  'hello-user-2',  '0612345672'),
+        ('a1b2c3d4-0003-4000-8000-000000000003', 'user-3',  'user-3@example.com',  'hello-user-3',  '0612345673'),
+        ('a1b2c3d4-0004-4000-8000-000000000004', 'user-4',  'user-4@example.com',  'hello-user-4',  '0612345674'),
+        ('a1b2c3d4-0005-4000-8000-000000000005', 'user-5',  'user-5@example.com',  'hello-user-5',  '0612345675'),
+        ('a1b2c3d4-0006-4000-8000-000000000006', 'user-6',  'user-6@example.com',  'hello-user-6',  '0612345676'),
+        ('a1b2c3d4-0007-4000-8000-000000000007', 'user-7',  'user-7@example.com',  'hello-user-7',  '0612345677'),
+        ('a1b2c3d4-0008-4000-8000-000000000008', 'user-8',  'user-8@example.com',  'hello-user-8',  '0612345678'),
+        ('a1b2c3d4-0009-4000-8000-000000000009', 'user-9',  'user-9@example.com',  'hello-user-9',  '0612345679'),
+        ('a1b2c3d4-0010-4000-8000-000000000010', 'user-10', 'user-10@example.com', 'hello-user-10', '0612345670');
+
+    -- Roles
+    INSERT INTO roles (id, name) VALUES
+        ('role-1-id', 'role-1'),
+        ('role-2-id', 'role-2'),
+        ('role-3-id', 'role-3'),
+        ('role-4-id', 'role-4');
+
+    -- Permissions
+    INSERT INTO permissions (id, name) VALUES
+        ('perm-1-id',  'permission-1'),
+        ('perm-2-id',  'permission-2'),
+        ('perm-3-id',  'permission-3'),
+        ('perm-4-id',  'permission-4'),
+        ('perm-5-id',  'permission-5'),
+        ('perm-6-id',  'permission-6'),
+        ('perm-7-id',  'permission-7'),
+        ('perm-8-id',  'permission-8'),
+        ('perm-9-id',  'permission-9'),
+        ('perm-10-id', 'permission-10');
+
+    -- Role → Permissions
+    -- role-1: permission-1, permission-2, permission-3
+    INSERT INTO role_permissions (role_id, permission_id) VALUES
+        ('role-1-id', 'perm-1-id'),
+        ('role-1-id', 'perm-2-id'),
+        ('role-1-id', 'perm-3-id');
+
+    -- role-2: permission-4, permission-5, permission-6
+    INSERT INTO role_permissions (role_id, permission_id) VALUES
+        ('role-2-id', 'perm-4-id'),
+        ('role-2-id', 'perm-5-id'),
+        ('role-2-id', 'perm-6-id');
+
+    -- role-3: permission-7, permission-8
+    INSERT INTO role_permissions (role_id, permission_id) VALUES
+        ('role-3-id', 'perm-7-id'),
+        ('role-3-id', 'perm-8-id');
+
+    -- role-4: permission-9, permission-10
+    INSERT INTO role_permissions (role_id, permission_id) VALUES
+        ('role-4-id', 'perm-9-id'),
+        ('role-4-id', 'perm-10-id');
+
+    -- User → Roles
+    -- user-1: role-1
+    INSERT INTO user_roles (user_id, role_id) VALUES
+        ('a1b2c3d4-0001-4000-8000-000000000001', 'role-1-id');
+
+    -- user-2: role-2
+    INSERT INTO user_roles (user_id, role_id) VALUES
+        ('a1b2c3d4-0002-4000-8000-000000000002', 'role-2-id');
+
+    -- user-3: role-3
+    INSERT INTO user_roles (user_id, role_id) VALUES
+        ('a1b2c3d4-0003-4000-8000-000000000003', 'role-3-id');
+
+    -- user-4: role-4
+    INSERT INTO user_roles (user_id, role_id) VALUES
+        ('a1b2c3d4-0004-4000-8000-000000000004', 'role-4-id');
+
+    -- user-5: role-1, role-2
+    INSERT INTO user_roles (user_id, role_id) VALUES
+        ('a1b2c3d4-0005-4000-8000-000000000005', 'role-1-id'),
+        ('a1b2c3d4-0005-4000-8000-000000000005', 'role-2-id');
+
+    -- user-6: role-2, role-3
+    INSERT INTO user_roles (user_id, role_id) VALUES
+        ('a1b2c3d4-0006-4000-8000-000000000006', 'role-2-id'),
+        ('a1b2c3d4-0006-4000-8000-000000000006', 'role-3-id');
+
+    -- user-7: role-1, role-3
+    INSERT INTO user_roles (user_id, role_id) VALUES
+        ('a1b2c3d4-0007-4000-8000-000000000007', 'role-1-id'),
+        ('a1b2c3d4-0007-4000-8000-000000000007', 'role-3-id');
+
+    -- user-8: role-4
+    INSERT INTO user_roles (user_id, role_id) VALUES
+        ('a1b2c3d4-0008-4000-8000-000000000008', 'role-4-id');
+
+    -- user-9: role-2, role-4
+    INSERT INTO user_roles (user_id, role_id) VALUES
+        ('a1b2c3d4-0009-4000-8000-000000000009', 'role-2-id'),
+        ('a1b2c3d4-0009-4000-8000-000000000009', 'role-4-id');
+
+    -- user-10: role-1, role-4
+    INSERT INTO user_roles (user_id, role_id) VALUES
+        ('a1b2c3d4-0010-4000-8000-000000000010', 'role-1-id'),
+        ('a1b2c3d4-0010-4000-8000-000000000010', 'role-4-id');
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: keycloak-permissions
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15-alpine
+          args: ["postgres", "-c", "max_prepared_transactions=100"]
+          env:
+            - name: POSTGRES_PASSWORD
+              value: "adminpassword"
+          ports:
+            - containerPort: 5432
+              name: postgres
+          volumeMounts:
+            - name: init-sql
+              mountPath: /docker-entrypoint-initdb.d
+      volumes:
+        - name: init-sql
+          configMap:
+            name: postgres-init-sql
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: keycloak-permissions
+spec:
+  ports:
+    - port: 5432
+      targetPort: 5432
+  selector:
+    app: postgres

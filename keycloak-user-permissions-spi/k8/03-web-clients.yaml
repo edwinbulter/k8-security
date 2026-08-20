@@ -1,0 +1,136 @@
+---
+# Web Client A
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-client-a
+  namespace: keycloak-permissions
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web-client-a
+  template:
+    metadata:
+      labels:
+        app: web-client-a
+    spec:
+      containers:
+        - name: web-client
+          image: keycloak-permissions-web-client:latest
+          imagePullPolicy: Never
+          env:
+            - name: CLIENT_NAME
+              value: "Web Client A"
+            - name: CLIENT_ID
+              value: "client-a"
+            - name: CLIENT_SECRET
+              value: "client-a-secret"
+            - name: KEYCLOAK_URL
+              value: "http://keycloak-permissions.localhost"
+            - name: REALM
+              value: "PermissionsRealm"
+            - name: REDIRECT_URI
+              value: "http://client-a.localhost/callback"
+            - name: HOST
+              value: "client-a.localhost"
+          ports:
+            - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-client-a
+  namespace: keycloak-permissions
+spec:
+  ports:
+    - port: 3000
+      targetPort: 3000
+  selector:
+    app: web-client-a
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: web-client-a-ingress
+  namespace: keycloak-permissions
+spec:
+  rules:
+    - host: client-a.localhost
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: web-client-a
+                port:
+                  number: 3000
+---
+# Web Client B
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-client-b
+  namespace: keycloak-permissions
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web-client-b
+  template:
+    metadata:
+      labels:
+        app: web-client-b
+    spec:
+      containers:
+        - name: web-client
+          image: keycloak-permissions-web-client:latest
+          imagePullPolicy: Never
+          env:
+            - name: CLIENT_NAME
+              value: "Web Client B"
+            - name: CLIENT_ID
+              value: "client-b"
+            - name: CLIENT_SECRET
+              value: "client-b-secret"
+            - name: KEYCLOAK_URL
+              value: "http://keycloak-permissions.localhost"
+            - name: REALM
+              value: "PermissionsRealm"
+            - name: REDIRECT_URI
+              value: "http://client-b.localhost/callback"
+            - name: HOST
+              value: "client-b.localhost"
+          ports:
+            - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-client-b
+  namespace: keycloak-permissions
+spec:
+  ports:
+    - port: 3000
+      targetPort: 3000
+  selector:
+    app: web-client-b
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: web-client-b-ingress
+  namespace: keycloak-permissions
+spec:
+  rules:
+    - host: client-b.localhost
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: web-client-b
+                port:
+                  number: 3000

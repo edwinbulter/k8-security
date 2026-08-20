@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  namespace: keycloak-permissions
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keycloak
+  template:
+    metadata:
+      labels:
+        app: keycloak
+    spec:
+      containers:
+        - name: keycloak
+          image: keycloak-permissions-spi:latest
+          imagePullPolicy: Never
+          args: ["start-dev"]
+          env:
+            - name: KEYCLOAK_ADMIN
+              value: "admin"
+            - name: KEYCLOAK_ADMIN_PASSWORD
+              value: "adminpassword"
+            - name: KC_PROXY
+              value: "edge"
+            - name: KC_HOSTNAME_STRICT
+              value: "false"
+            - name: KC_HOSTNAME
+              value: "keycloak-permissions.localhost"
+            - name: KC_DB
+              value: "postgres"
+            - name: KC_DB_URL
+              value: "jdbc:postgresql://postgres:5432/keycloak"
+            - name: KC_DB_USERNAME
+              value: "postgres"
+            - name: KC_DB_PASSWORD
+              value: "adminpassword"
+          ports:
+            - containerPort: 8080
+              name: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: keycloak
+  namespace: keycloak-permissions
+spec:
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: keycloak
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: keycloak-ingress
+  namespace: keycloak-permissions
+spec:
+  rules:
+    - host: keycloak-permissions.localhost
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: keycloak
+                port:
+                  number: 8080

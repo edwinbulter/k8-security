@@ -1,12 +1,12 @@
 # Security Platform: Zero-Trust Architectuur PoC
 
-Dit project bevat vier onafhankelijke Proof of Concepts (PoCs) die samen de basis vormen voor een gelaagde beveiligingsarchitectuur binnen Kubernetes.
+Dit project bevat vijf onafhankelijke Proof of Concepts (PoCs) die samen de basis vormen voor een gelaagde beveiligingsarchitectuur binnen Kubernetes.
 
 ---
 
 ## 📂 Beschikbare Demo's
 
-Dit project is opgedeeld in vier lagen. Elke demo heeft een eigen map met specifieke configuratie en een uitgebreide handleiding in de bijbehorende `README.md`.
+Dit project is opgedeeld in vijf lagen. Elke demo heeft een eigen map met specifieke configuratie en een uitgebreide handleiding in de bijbehorende `README.md`.
 
 1. 👤 **[User Identity & SSO Demo](./keycloak-sso/README.md)**
     Authenticatie en Single Sign-On (SSO) voor menselijke gebruikers via het BFF-patroon met Keycloak en OAuth2-Proxy.
@@ -23,6 +23,10 @@ Dit project is opgedeeld in vier lagen. Elke demo heeft een eigen map met specif
 4. 🗄️ **[Keycloak User Storage Provider Demo](./keycloak-userprovider/README.md)**
     Federatie van identiteiten door Keycloak live te koppelen aan een externe PostgreSQL gebruikersdatabase via JPA.
     *Zie de [Demo Handleiding](./keycloak-userprovider/README.md) voor setup instructies.*
+
+5. 🔑 **[Keycloak User Permissions SPI Demo](./keycloak-user-permissions-spi/README.md)**
+    Custom Protocol Mapper die permissions uit een externe PostgreSQL database als JWT claims injecteert, met twee Node.js web clients en SSO.
+    *Zie de [Demo Handleiding](./keycloak-user-permissions-spi/README.md) voor setup instructies.*
 
 ---
 

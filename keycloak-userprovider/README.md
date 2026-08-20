@@ -1,6 +1,6 @@
 # Keycloak User Storage Provider met PostgreSQL
 
-Dit project demonstreert een custom **Keycloak User Storage Provider** die gebruikers uit een externe **PostgreSQL** database leest in plaats van Keycloak's ingebouwde gebruikersopslag. Het is gebaseerd op de officiële [Keycloak user-storage-jpa quickstart](https://github.com/keycloak/keycloak-quickstarts/tree/main/extension/user-storage-jpa).
+Dit project demonstreert een custom **Keycloak User Storage Provider** die gebruikers uit een externe **PostgreSQL** database leest in plaats van Keycloak's ingebouwde gebruikersopslag. Het is gebaseerd op de officiële [Keycloak user-storage-jpa quickstart](https://github.com/keycloak/keycloak-quickstarts/tree/main/extension/user-storage-jpa). Voor een beter begrip is het aan te raden om eerst [Server development - User Storage SPI](https://www.keycloak.org/docs/latest/server_development/index.html#_user-storage-spi) te lezen.
 
 ---
 
