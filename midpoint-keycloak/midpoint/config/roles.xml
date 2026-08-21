@@ -1,0 +1,45 @@
+<objects xmlns="http://midpoint.evolveum.com/xml/ns/public/common/common-3"
+         xmlns:c="http://midpoint.evolveum.com/xml/ns/public/common/common-3"
+         xmlns:org="http://midpoint.evolveum.com/xml/ns/public/common/org-3">
+
+    <role oid="role-1-oid">
+        <name>role-1</name>
+        <description>Role 1 - Provides permission-1, permission-2, permission-3</description>
+        <inducement>
+            <construction>
+                <resourceRef oid="35492bc3-8233-4ed9-b423-09979b6345e3" type="c:ResourceType"/>
+            </construction>
+        </inducement>
+    </role>
+
+    <role oid="role-2-oid">
+        <name>role-2</name>
+        <description>Role 2 - Provides permission-4, permission-5, permission-6</description>
+        <inducement>
+            <construction>
+                <resourceRef oid="35492bc3-8233-4ed9-b423-09979b6345e3" type="c:ResourceType"/>
+            </construction>
+        </inducement>
+    </role>
+
+    <role oid="role-3-oid">
+        <name>role-3</name>
+        <description>Role 3 - Additional permissions</description>
+        <inducement>
+            <construction>
+                <resourceRef oid="35492bc3-8233-4ed9-b423-09979b6345e3" type="c:ResourceType"/>
+            </construction>
+        </inducement>
+    </role>
+
+    <role oid="role-4-oid">
+        <name>role-4</name>
+        <description>Role 4 - Additional permissions</description>
+        <inducement>
+            <construction>
+                <resourceRef oid="35492bc3-8233-4ed9-b423-09979b6345e3" type="c:ResourceType"/>
+            </construction>
+        </inducement>
+    </role>
+
+</objects>

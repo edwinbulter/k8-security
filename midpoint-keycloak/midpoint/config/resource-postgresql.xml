@@ -1,110 +1,99 @@
-<!--
-  midPoint Resource Definition: PostgreSQL userdb
+<objects xmlns="http://midpoint.evolveum.com/xml/ns/public/common/common-3"
+         xmlns:c="http://midpoint.evolveum.com/xml/ns/public/common/common-3"
+         xmlns:q="http://prism.evolveum.com/xml/ns/public/query-3"
+         xmlns:icfs="http://midpoint.evolveum.com/xml/ns/public/connector/icf-1/resource-schema-3"
+         xmlns:ri="http://midpoint.evolveum.com/xml/ns/public/resource/instance-3"
+         xmlns:icfc="http://midpoint.evolveum.com/xml/ns/public/connector/icf-1/connector-schema-3">
 
-  This resource defines the connection from midPoint to the PostgreSQL `userdb` database.
-  midPoint provisions users and role assignments (user_roles) to this database.
-  Roles, permissions, and role_permissions are managed manually (not by midPoint).
-
-  Import this file in midPoint via:
-  Configuration → Import Objects → paste this XML → Import
--->
-<resource xmlns="http://midpoint.evolveum.com/xml/ns/public/common/common-3"
-          oid="00000000-0000-0000-0000-000000000001"
-          name="PostgreSQL UserDB">
-
-  <!-- Connector configuration: JDBC Database Table Connector -->
-  <connectorRef type="c:ConnectorType">
-    <filter>
-      <equal>
-        <path>c:connectorType</path>
-        <value>com.evolveum.polygon.connector.jdbc.DatabaseTableConnector</value>
-      </equal>
-    </filter>
-  </connectorRef>
-
-  <!-- Connection configuration -->
-  <connectorConfiguration xmlns:icfc="http://midpoint.evolveum.com/xml/ns/public/connector/icf-1.0/connector-schema-3">
-    <icfc:configurationProperties
-      xmlns:icfc="http://midpoint.evolveum.com/xml/ns/public/connector/icf-1.0/connector-schema-3"
-      xmlns:dbt="http://midpoint.evolveum.com/xml/ns/public/connector/icf-1.0/connector-schema-3">
-      <dbt:jdbcUrl>jdbc:postgresql://postgres:5432/userdb</dbt:jdbcUrl>
-      <dbt:jdbcDriver>org.postgresql.Driver</dbt:jdbcDriver>
-      <dbt:user>postgres</dbt:user>
-      <dbt:password>adminpassword</dbt:password>
-    </icfc:configurationProperties>
-  </connectorConfiguration>
-
-  <!-- Schema: User object class -->
-  <schemaHandling>
-    <objectType>
-      <displayName>User</displayName>
-      <defaultKind>account</defaultKind>
-      <intent>default</intent>
-      <objectClass>ri:__ACCOUNT__</objectClass>
-
-      <!-- Attribute mappings -->
-      <attribute>
-        <ref>ri:id</ref>
-        <outbound>
-          <expression>
-            <script>
-              <code>midpoint.getFocusExtension().get('id')</code>
-            </script>
-          </expression>
-        </outbound>
-      </attribute>
-
-      <attribute>
-        <ref>ri:username</ref>
-        <outbound>
-          <expression>
-            <path>$focus/name</path>
-          </expression>
-        </outbound>
-      </attribute>
-
-      <attribute>
-        <ref>ri:email</ref>
-        <outbound>
-          <expression>
-            <path>$focus/email</path>
-          </expression>
-        </outbound>
-      </attribute>
-
-      <attribute>
-        <ref>ri:password</ref>
-        <outbound>
-          <expression>
-            <script>
-              <code>midpoint.getFocusExtension().get('password')</code>
-            </script>
-          </expression>
-        </outbound>
-      </attribute>
-
-      <attribute>
-        <ref>ri:phone</ref>
-        <outbound>
-          <expression>
-            <script>
-              <code>midpoint.getFocusExtension().get('phone')</code>
-            </script>
-          </expression>
-        </outbound>
-      </attribute>
-    </objectType>
-  </schemaHandling>
-
-  <!-- Synchronization: react to changes in midPoint -->
-  <synchronization>
-    <objectSynchronizationStage>
-      <kind>account</kind>
-      <intent>default</intent>
-      <synchronizationSituation>unmatched</synchronizationSituation>
-      <action>
-        <handlerUri>http://midpoint.evolveum.com/xml/ns/public/model/action-3#create</handlerUri>
-      </action>
-    </objectSynchronizationStage>
-  </synchronization>
-</resource>
+    <resource oid="35492bc3-8233-4ed9-b423-09979b6345e3">
+        <name>PostgreSQL UserDB</name>
+        <connectorRef oid="db4cd6a1-2117-417a-a5b6-1b5dde5b2c10" type="c:ConnectorType"/>
+        <connectorConfiguration>
+            <icfc:configurationProperties xmlns:icscdbtable="http://midpoint.evolveum.com/xml/ns/public/connector/icf-1/bundle/com.evolveum.polygon.connector-databasetable/org.identityconnectors.databasetable.DatabaseTableConnector">
+                <icscdbtable:port>5432</icscdbtable:port>
+                <icscdbtable:host>postgres</icscdbtable:host>
+                <icscdbtable:user>postgres</icscdbtable:user>
+                <icscdbtable:password>
+                    <clearValue>adminpassword</clearValue>
+                </icscdbtable:password>
+                <icscdbtable:database>userdb</icscdbtable:database>
+                <icscdbtable:table>users</icscdbtable:table>
+                <icscdbtable:keyColumn>id</icscdbtable:keyColumn>
+                <icscdbtable:passwordColumn>password</icscdbtable:passwordColumn>
+                <icscdbtable:jdbcDriver>org.postgresql.Driver</icscdbtable:jdbcDriver>
+                <icscdbtable:jdbcUrlTemplate>jdbc:postgresql://%h:%p/%d</icscdbtable:jdbcUrlTemplate>
+            </icfc:configurationProperties>
+        </connectorConfiguration>
+        <schemaHandling>
+            <objectType>
+                <kind>account</kind>
+                <intent>default</intent>
+                <displayName>Default Account</displayName>
+                <default>true</default>
+                <objectClass>ri:AccountObjectClass</objectClass>
+                <attribute>
+                    <ref>icfs:name</ref>
+                    <outbound>
+                        <source>
+                            <path>personalNumber</path>
+                        </source>
+                    </outbound>
+                </attribute>
+                <attribute>
+                    <ref>ri:username</ref>
+                    <outbound>
+                        <source>
+                            <path>name</path>
+                        </source>
+                    </outbound>
+                </attribute>
+                <attribute>
+                    <ref>ri:email</ref>
+                    <outbound>
+                        <source>
+                            <path>emailAddress</path>
+                        </source>
+                    </outbound>
+                </attribute>
+                <attribute>
+                    <ref>ri:phone</ref>
+                    <outbound>
+                        <source>
+                            <path>telephoneNumber</path>
+                        </source>
+                    </outbound>
+                </attribute>
+                <credentials>
+                    <password>
+                        <outbound>
+                            <expression>
+                                <script>
+                                    <code>midpoint.getPlaintextUserPassword(focus)</code>
+                                </script>
+                            </expression>
+                        </outbound>
+                    </password>
+                </credentials>
+            </objectType>
+        </schemaHandling>
+        <synchronization>
+            <objectSynchronization>
+                <kind>account</kind>
+                <intent>default</intent>
+                <enabled>true</enabled>
+                <reaction>
+                    <situation>unlinked</situation>
+                    <action>
+                        <handlerUri>http://midpoint.evolveum.com/xml/ns/public/model/action-3#link</handlerUri>
+                    </action>
+                </reaction>
+                <reaction>
+                    <situation>unmatched</situation>
+                    <action>
+                        <handlerUri>http://midpoint.evolveum.com/xml/ns/public/model/action-3#addFocus</handlerUri>
+                    </action>
+                </reaction>
+            </objectSynchronization>
+        </synchronization>
+    </resource>
+</objects>

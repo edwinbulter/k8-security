@@ -68,10 +68,26 @@ kind load docker-image keycloak-midpoint-spi:latest --name single-node
 kind load docker-image keycloak-midpoint-web-client:latest --name single-node
 ```
 
-## Stap 4: midPoint deployen
+## Stap 4: midPoint database initialiseren
+
+Het midPoint schema moet handmatig in de `midpoint` database worden geladen met het native PostgreSQL SQL script:
+
+```bash
+# Kopieer het SQL script uit de midPoint image naar lokaal
+kubectl cp midpoint-keycloak/$(kubectl get pod -n midpoint-keycloak -l app=midpoint -o jsonpath='{.items[0].metadata.name}'):/opt/midpoint/doc/config/sql/native/postgres.sql /tmp/midpoint-postgres.sql
+
+# Laad het schema in de midpoint database
+kubectl cp /tmp/midpoint-postgres.sql midpoint-keycloak/$(kubectl get pod -n midpoint-keycloak -l app=postgres -o jsonpath='{.items[0].metadata.name}'):/tmp/midpoint-postgres.sql
+kubectl exec deployment/postgres -n midpoint-keycloak -- psql -U postgres -d midpoint -f /tmp/midpoint-postgres.sql
+```
+
+> **Let op:** Dit script moet worden uitgevoerd nadat de midPoint image minimaal één keer is gestart (zodat de pod bestaat en het SQL bestand beschikbaar is). Als midPoint nog niet is gedeployed, deploy hem dan eerst, wacht tot de pod draait, en voer dan deze stap uit.
+
+## Stap 5: midPoint (her)deployen
 
 ```bash
 kubectl apply -f midpoint-keycloak/k8/02-midpoint.yaml
+kubectl delete pod -l app=midpoint -n midpoint-keycloak
 ```
 
 Wacht tot midPoint draait:
@@ -86,7 +102,7 @@ midPoint is toegankelijk via: http://midpoint.localhost
 - Gebruiker: `administrator`
 - Wachtwoord: `5ecr3t`
 
-## Stap 5: Keycloak deployen
+## Stap 6: Keycloak deployen
 
 ```bash
 kubectl apply -f midpoint-keycloak/k8/03-keycloak.yaml
@@ -103,23 +119,6 @@ Keycloak is toegankelijk via: http://keycloak-midpoint.localhost
 **Inloggen:**
 - Gebruiker: `admin`
 - Wachtwoord: `adminpassword`
-
-## Stap 6: Web clients deployen
-
-```bash
-kubectl apply -f midpoint-keycloak/k8/04-web-clients.yaml
-```
-
-Wacht tot de web clients draaien:
-
-```bash
-kubectl wait --for=condition=Available deployment/web-client-a -n midpoint-keycloak --timeout=60s
-kubectl wait --for=condition=Available deployment/web-client-b -n midpoint-keycloak --timeout=60s
-```
-
-Web clients:
-- Client A: http://client-a-mid.localhost
-- Client B: http://client-b-mid.localhost
 
 ## Stap 7: Keycloak configureren
 
@@ -143,21 +142,46 @@ Dit script doet het volgende:
 - Controleer bij **User Federation** dat `user-permissions-jpa` aanwezig is
 - Controleer bij **Clients** dat `client-a` en `client-b` aanwezig zijn
 
-## Stap 8: midPoint configureren
+## Stap 8: Web clients deployen
 
-### 8.1 PostgreSQL connector toevoegen
+```bash
+kubectl apply -f midpoint-keycloak/k8/04-web-clients.yaml
+```
+
+Wacht tot de web clients draaien:
+
+```bash
+kubectl wait --for=condition=Available deployment/web-client-a -n midpoint-keycloak --timeout=60s
+kubectl wait --for=condition=Available deployment/web-client-b -n midpoint-keycloak --timeout=60s
+```
+
+Web clients:
+- Client A: http://client-a-mid.localhost
+- Client B: http://client-b-mid.localhost
+
+## Stap 9: midPoint configureren
+
+### 9.1 PostgreSQL connector toevoegen
 
 midPoint heeft een PostgreSQL JDBC driver nodig. De officiële midPoint Docker image bevat deze al.
 
-### 8.2 Resource aanmaken
+### 9.2 Resource aanmaken
 
 1. Ga naar http://midpoint.localhost
 2. Log in met `administrator` / `5ecr3t`
 3. Ga naar **Configuration** → **Import Objects**
-4. Importeer het bestand `midpoint/config/resource-postgresql.xml`
+4. Importeer het bestand `midpoint/config/resource-postgresql.xml` (vink **Overwrite existing object** aan als je dit al eerder hebt gedaan)
 5. Ga naar **Resources** → verify dat de resource `PostgreSQL UserDB` groen is
 
-### 8.3 Gebruikers aanmaken in midPoint
+### 9.3 Rollen aanmaken in midPoint
+
+Voordat je rollen kunt toewijzen aan gebruikers, moet je ze eerst in midPoint aanmaken:
+
+1. Ga naar **Configuration** → **Import Objects**
+2. Importeer het bestand `midpoint/config/roles.xml`
+3. Ga naar **Roles** → **All roles** en controleer of `role-1` t/m `role-4` aanwezig zijn.
+
+### 9.4 Gebruikers aanmaken in midPoint
 
 Maak drie testgebruikers aan in midPoint:
 
@@ -185,7 +209,7 @@ Maak drie testgebruikers aan in midPoint:
 - `password`: `hello-user-3`
 - `phone`: `0612345673`
 
-### 8.4 Rollen toewijzen in midPoint
+### 9.5 Rollen toewijzen in midPoint
 
 Wijs rollen toe aan de gebruikers door role assignments toe te voegen:
 
@@ -193,7 +217,7 @@ Wijs rollen toe aan de gebruikers door role assignments toe te voegen:
 - `user-2` → `role-2` (levert permission-4, permission-5, permission-6)
 - `user-3` → `role-1` + `role-2` (levert permission-1 t/m permission-6)
 
-### 8.5 Provisioning uitvoeren
+### 9.6 Provisioning uitvoeren
 
 1. Ga naar **Resources** → `PostgreSQL UserDB` → **Accounts**
 2. Controleer dat de gebruikers zijn geprovisioneerd
@@ -204,22 +228,22 @@ kubectl exec deployment/postgres -n midpoint-keycloak -- psql -U postgres -d use
 kubectl exec deployment/postgres -n midpoint-keycloak -- psql -U postgres -d userdb -c "SELECT * FROM user_roles;"
 ```
 
-## Stap 9: Testen
+## Stap 10: Testen
 
-### 9.1 Inloggen via Client A
+### 10.1 Inloggen via Client A
 
 1. Open http://client-a-mid.localhost in je browser
 2. Je wordt doorgestuurd naar Keycloak login
 3. Log in met `user-1` / `hello-user-1`
 4. Je ziet de permissies: `permission-1`, `permission-2`, `permission-3`
 
-### 9.2 SSO testen
+### 10.2 SSO testen
 
 1. Open http://client-b-mid.localhost in dezelfde browser
 2. Je bent automatisch ingelogd (SSO)
 3. Je ziet dezelfde permissies
 
-### 9.3 Rol wijzigen in midPoint
+### 10.3 Rol wijzigen in midPoint
 
 1. Ga naar midPoint → **Users** → `user-1`
 2. Verwijder de `role-1` assignment
@@ -228,7 +252,7 @@ kubectl exec deployment/postgres -n midpoint-keycloak -- psql -U postgres -d use
 5. Log uit en opnieuw in via http://client-a-mid.localhost
 6. Je ziet nu: `permission-4`, `permission-5`, `permission-6`
 
-### 9.4 Gebruiker verwijderen in midPoint
+### 10.4 Gebruiker verwijderen in midPoint
 
 1. Ga naar midPoint → **Users** → `user-3` → **Delete**
 2. Wacht tot provisioning is voltooid

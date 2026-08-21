@@ -17,21 +17,19 @@ spec:
         - name: midpoint
           image: evolveum/midpoint:4.8
           env:
-            - name: MIDPOINT_DATA_DIR
-              value: "/opt/midpoint/data"
-            - name: REPO_DATABASE_TYPE
+            - name: MP_SET_midpoint_repository_database
+              value: "postgresql"
+            - name: MP_SET_midpoint_repository_jdbcUrl
+              value: "jdbc:postgresql://postgres:5432/midpoint"
+            - name: MP_SET_midpoint_repository_jdbcUsername
               value: "postgres"
-            - name: REPO_HOST
-              value: "postgres"
-            - name: REPO_PORT
-              value: "5432"
-            - name: REPO_DATABASE
-              value: "midpoint"
-            - name: REPO_USER
-              value: "postgres"
-            - name: REPO_PASSWORD
+            - name: MP_SET_midpoint_repository_jdbcPassword
               value: "adminpassword"
-            - name: MIDPOINT_ADMIN_PASSWORD
+            - name: MP_SET_midpoint_repository_hibernateHbm2ddl
+              value: "update"
+            - name: MP_SET_midpoint_repository_initializationFailTimeout
+              value: "60000"
+            - name: MP_SET_midpoint_administrator_initialPassword
               value: "5ecr3t"
           ports:
             - containerPort: 8080
