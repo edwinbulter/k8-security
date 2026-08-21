@@ -1,12 +1,12 @@
 # Security Platform: Zero-Trust Architectuur PoC
 
-Dit project bevat vijf onafhankelijke Proof of Concepts (PoCs) die samen de basis vormen voor een gelaagde beveiligingsarchitectuur binnen Kubernetes.
+Dit project bevat zes onafhankelijke Proof of Concepts (PoCs) die samen de basis vormen voor een gelaagde beveiligingsarchitectuur binnen Kubernetes.
 
 ---
 
 ## 📂 Beschikbare Demo's
 
-Dit project is opgedeeld in vijf lagen. Elke demo heeft een eigen map met specifieke configuratie en een uitgebreide handleiding in de bijbehorende `README.md`.
+Dit project is opgedeeld in zes lagen. Elke demo heeft een eigen map met specifieke configuratie en een uitgebreide handleiding in de bijbehorende `README.md`.
 
 1. 👤 **[User Identity & SSO Demo](./keycloak-sso/README.md)**
     Authenticatie en Single Sign-On (SSO) voor menselijke gebruikers via het BFF-patroon met Keycloak en OAuth2-Proxy.
@@ -27,6 +27,10 @@ Dit project is opgedeeld in vijf lagen. Elke demo heeft een eigen map met specif
 5. 🔑 **[Keycloak User Permissions SPI Demo](./keycloak-user-permissions-spi/README.md)**
     Custom Protocol Mapper die permissions uit een externe PostgreSQL database als JWT claims injecteert, met twee Node.js web clients en SSO.
     *Zie de [Demo Handleiding](./keycloak-user-permissions-spi/README.md) voor setup instructies.*
+
+6. 🏛️ **[midPoint + Keycloak Identity Governance Demo](./midpoint-keycloak/README.md)**
+    Evolveum midPoint als Identity Governance & Administration platform dat gebruikers en role assignments provisioneert naar PostgreSQL, geïntegreerd met Keycloak voor authenticatie en JWT permissies.
+    *Zie de [Demo Handleiding](./midpoint-keycloak/README.md) voor setup instructies.*
 
 ---
 
@@ -135,3 +139,44 @@ De **Keycloak User Storage Provider Demo** vult de Zero-Trust architectuur aan o
 - **Never Trust, Always Verify:** Keycloak vertrouwt niet op een gekopieerde gebruikerslijst, maar haalt gebruikersgegevens live uit de autoritatieve bron.
 - **Least Privilege:** De provider heeft alleen-lezen toegang tot de gebruikersdatabase; wijzigingen gaan via de normale Kanalen van de bronorganisatie.
 - **Assume Breach:** Als Keycloak wordt gecompromitteerd, blijven de wachtwoorden veilig in de externe database — de aanvaller krijgt geen toegang tot de brondata.
+
+---
+
+## 🏛️ Identity Governance: midPoint + Keycloak Integratie
+
+De **midPoint + Keycloak Demo** voegt Identity Governance & Administration (IGA) toe aan de Zero-Trust architectuur:
+
+### Waarom is IGA essentieel voor Zero-Trust?
+
+* **Governed Lifecycle:** Zonder IGA worden gebruikers handmatig aangemaakt en verwijderd, wat leidt tot "orphan accounts" en onterechte toegang. midPoint automatiseert de volledige gebruikerslicycle: onboarding, role changes, offboarding.
+
+* **Source of Truth:** midPoint fungeert als centrale autoriteit voor "wie heeft welke rol". Wijzigingen in midPoint worden automatisch geprovisioneerd naar de PostgreSQL database die Keycloak leest. Dit elimineert handmatige SQL manipulatie.
+
+* **Audit & Compliance:** midPoint houdt een volledige audit trail bij van alle wijzigingen — wie heeft welke rol toegewezen en wanneer. Dit is essentieel voor compliance (GDPR, ISO 27001, SOC 2).
+
+### De IGA Keten
+
+```text
+[ midPoint (IGA) ]
+   - User lifecycle management
+   - Role assignment & governance
+          │
+   (Provisioning via JDBC)
+          ▼
+   [ PostgreSQL (userdb) ]
+   - users, user_roles tabellen
+          │
+   (JPA User Storage Provider)
+          ▼
+   [ Keycloak ]  <─── Leest gebruikers en permissies live
+          │
+   (OIDC + Permission Protocol Mapper)
+          ▼
+   [ Web Clients ]  <─── JWT tokens met governed permissies
+```
+
+### IGA Principes in Praktijk
+
+- **Never Trust, Always Verify:** Keycloak leest permissies live uit de database die door midPoint wordt beheerd — geen vertrouwen op verouderde caches.
+- **Least Privilege:** midPoint zorgt dat gebruikers alleen de rollen hebben die ze nodig hebben; verwijderde rollen verdwijnen direct uit het JWT token bij volgende login.
+- **Assume Breach:** Bij compromittering van Keycloak blijft midPoint de autoriteit — de aanvaller kan geen rollen toewijzen of gebruikers aanmaken.

@@ -1,0 +1,127 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: midpoint-keycloak
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init-sql
+  namespace: midpoint-keycloak
+data:
+  init.sql: |
+    CREATE DATABASE keycloak;
+    CREATE DATABASE midpoint;
+    CREATE DATABASE userdb;
+    \c userdb;
+
+    CREATE TABLE users (
+        id VARCHAR(255) PRIMARY KEY,
+        username VARCHAR(255) UNIQUE NOT NULL,
+        email VARCHAR(255),
+        password VARCHAR(255),
+        phone VARCHAR(255)
+    );
+
+    CREATE TABLE roles (
+        id VARCHAR(36) PRIMARY KEY,
+        name VARCHAR(50) NOT NULL UNIQUE
+    );
+
+    CREATE TABLE permissions (
+        id VARCHAR(36) PRIMARY KEY,
+        name VARCHAR(50) NOT NULL UNIQUE
+    );
+
+    CREATE TABLE role_permissions (
+        role_id VARCHAR(36) REFERENCES roles(id),
+        permission_id VARCHAR(36) REFERENCES permissions(id),
+        PRIMARY KEY (role_id, permission_id)
+    );
+
+    CREATE TABLE user_roles (
+        user_id VARCHAR(255) REFERENCES users(id),
+        role_id VARCHAR(36) REFERENCES roles(id),
+        PRIMARY KEY (user_id, role_id)
+    );
+
+    -- Roles (managed manually, not by midPoint)
+    INSERT INTO roles (id, name) VALUES
+        ('role-1-id', 'role-1'),
+        ('role-2-id', 'role-2'),
+        ('role-3-id', 'role-3'),
+        ('role-4-id', 'role-4');
+
+    -- Permissions (managed manually, not by midPoint)
+    INSERT INTO permissions (id, name) VALUES
+        ('perm-1-id',  'permission-1'),
+        ('perm-2-id',  'permission-2'),
+        ('perm-3-id',  'permission-3'),
+        ('perm-4-id',  'permission-4'),
+        ('perm-5-id',  'permission-5'),
+        ('perm-6-id',  'permission-6'),
+        ('perm-7-id',  'permission-7'),
+        ('perm-8-id',  'permission-8'),
+        ('perm-9-id',  'permission-9'),
+        ('perm-10-id', 'permission-10');
+
+    -- Role → Permissions (managed manually, not by midPoint)
+    INSERT INTO role_permissions (role_id, permission_id) VALUES
+        ('role-1-id', 'perm-1-id'),
+        ('role-1-id', 'perm-2-id'),
+        ('role-1-id', 'perm-3-id'),
+        ('role-2-id', 'perm-4-id'),
+        ('role-2-id', 'perm-5-id'),
+        ('role-2-id', 'perm-6-id'),
+        ('role-3-id', 'perm-7-id'),
+        ('role-3-id', 'perm-8-id'),
+        ('role-4-id', 'perm-9-id'),
+        ('role-4-id', 'perm-10-id');
+
+    -- NOTE: users and user_roles tables are left empty.
+    -- midPoint will provision users and role assignments.
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: midpoint-keycloak
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15-alpine
+          args: ["postgres", "-c", "max_prepared_transactions=100"]
+          env:
+            - name: POSTGRES_PASSWORD
+              value: "adminpassword"
+          ports:
+            - containerPort: 5432
+              name: postgres
+          volumeMounts:
+            - name: init-sql
+              mountPath: /docker-entrypoint-initdb.d
+      volumes:
+        - name: init-sql
+          configMap:
+            name: postgres-init-sql
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: midpoint-keycloak
+spec:
+  ports:
+    - port: 5432
+      targetPort: 5432
+  selector:
+    app: postgres

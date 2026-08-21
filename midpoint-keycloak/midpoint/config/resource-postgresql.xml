@@ -1,0 +1,110 @@
+<!--
+  midPoint Resource Definition: PostgreSQL userdb
+
+  This resource defines the connection from midPoint to the PostgreSQL `userdb` database.
+  midPoint provisions users and role assignments (user_roles) to this database.
+  Roles, permissions, and role_permissions are managed manually (not by midPoint).
+
+  Import this file in midPoint via:
+  Configuration → Import Objects → paste this XML → Import
+-->
+<resource xmlns="http://midpoint.evolveum.com/xml/ns/public/common/common-3"
+          oid="00000000-0000-0000-0000-000000000001"
+          name="PostgreSQL UserDB">
+
+  <!-- Connector configuration: JDBC Database Table Connector -->
+  <connectorRef type="c:ConnectorType">
+    <filter>
+      <equal>
+        <path>c:connectorType</path>
+        <value>com.evolveum.polygon.connector.jdbc.DatabaseTableConnector</value>
+      </equal>
+    </filter>
+  </connectorRef>
+
+  <!-- Connection configuration -->
+  <connectorConfiguration xmlns:icfc="http://midpoint.evolveum.com/xml/ns/public/connector/icf-1.0/connector-schema-3">
+    <icfc:configurationProperties
+      xmlns:icfc="http://midpoint.evolveum.com/xml/ns/public/connector/icf-1.0/connector-schema-3"
+      xmlns:dbt="http://midpoint.evolveum.com/xml/ns/public/connector/icf-1.0/connector-schema-3">
+      <dbt:jdbcUrl>jdbc:postgresql://postgres:5432/userdb</dbt:jdbcUrl>
+      <dbt:jdbcDriver>org.postgresql.Driver</dbt:jdbcDriver>
+      <dbt:user>postgres</dbt:user>
+      <dbt:password>adminpassword</dbt:password>
+    </icfc:configurationProperties>
+  </connectorConfiguration>
+
+  <!-- Schema: User object class -->
+  <schemaHandling>
+    <objectType>
+      <displayName>User</displayName>
+      <defaultKind>account</defaultKind>
+      <intent>default</intent>
+      <objectClass>ri:__ACCOUNT__</objectClass>
+
+      <!-- Attribute mappings -->
+      <attribute>
+        <ref>ri:id</ref>
+        <outbound>
+          <expression>
+            <script>
+              <code>midpoint.getFocusExtension().get('id')</code>
+            </script>
+          </expression>
+        </outbound>
+      </attribute>
+
+      <attribute>
+        <ref>ri:username</ref>
+        <outbound>
+          <expression>
+            <path>$focus/name</path>
+          </expression>
+        </outbound>
+      </attribute>
+
+      <attribute>
+        <ref>ri:email</ref>
+        <outbound>
+          <expression>
+            <path>$focus/email</path>
+          </expression>
+        </outbound>
+      </attribute>
+
+      <attribute>
+        <ref>ri:password</ref>
+        <outbound>
+          <expression>
+            <script>
+              <code>midpoint.getFocusExtension().get('password')</code>
+            </script>
+          </expression>
+        </outbound>
+      </attribute>
+
+      <attribute>
+        <ref>ri:phone</ref>
+        <outbound>
+          <expression>
+            <script>
+              <code>midpoint.getFocusExtension().get('phone')</code>
+            </script>
+          </expression>
+        </outbound>
+      </attribute>
+    </objectType>
+  </schemaHandling>
+
+  <!-- Synchronization: react to changes in midPoint -->
+  <synchronization>
+    <objectSynchronizationStage>
+      <kind>account</kind>
+      <intent>default</intent>
+      <synchronizationSituation>unmatched</synchronizationSituation>
+      <action>
+        <handlerUri>http://midpoint.evolveum.com/xml/ns/public/model/action-3#create</handlerUri>
+      </action>
+    </objectSynchronizationStage>
+  </synchronization>
+</resource>

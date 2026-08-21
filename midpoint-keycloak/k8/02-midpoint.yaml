@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: midpoint
+  namespace: midpoint-keycloak
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: midpoint
+  template:
+    metadata:
+      labels:
+        app: midpoint
+    spec:
+      containers:
+        - name: midpoint
+          image: evolveum/midpoint:4.8
+          env:
+            - name: MIDPOINT_DATA_DIR
+              value: "/opt/midpoint/data"
+            - name: REPO_DATABASE_TYPE
+              value: "postgres"
+            - name: REPO_HOST
+              value: "postgres"
+            - name: REPO_PORT
+              value: "5432"
+            - name: REPO_DATABASE
+              value: "midpoint"
+            - name: REPO_USER
+              value: "postgres"
+            - name: REPO_PASSWORD
+              value: "adminpassword"
+            - name: MIDPOINT_ADMIN_PASSWORD
+              value: "5ecr3t"
+          ports:
+            - containerPort: 8080
+              name: http
+          volumeMounts:
+            - name: midpoint-data
+              mountPath: /opt/midpoint/data
+      volumes:
+        - name: midpoint-data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: midpoint
+  namespace: midpoint-keycloak
+spec:
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: midpoint
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: midpoint-ingress
+  namespace: midpoint-keycloak
+spec:
+  rules:
+    - host: midpoint.localhost
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: midpoint
+                port:
+                  number: 8080
