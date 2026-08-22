@@ -14,8 +14,23 @@ const REDIRECT_URI = process.env.REDIRECT_URI || `http://${process.env.HOST || '
 const port = 3000;
 
 let client;
-let codeVerifier = generators.codeVerifier();
-let codeChallenge = generators.codeChallenge(codeVerifier);
+
+// Per-login-attempt PKCE state, keyed by the random "state" value sent to
+// Keycloak. This avoids race conditions when multiple login flows are in
+// flight at once (e.g. multiple tabs, reloads, or overlapping requests),
+// which previously caused "invalid_grant" / "state missing" errors because
+// codeVerifier/codeChallenge were stored in shared module-level variables.
+const pendingAuth = new Map();
+const PENDING_AUTH_TTL_MS = 5 * 60 * 1000;
+
+function cleanupPendingAuth() {
+    const now = Date.now();
+    for (const [state, entry] of pendingAuth) {
+        if (now - entry.createdAt > PENDING_AUTH_TTL_MS) {
+            pendingAuth.delete(state);
+        }
+    }
+}
 
 async function initClient() {
     const issuer = await Issuer.discover(`${KEYCLOAK_INTERNAL_URL}/realms/${REALM}`);
@@ -33,23 +48,35 @@ app.get('/', async (req, res) => {
         return res.status(500).send('OIDC client not initialized yet. Please retry in a moment.');
     }
 
-    codeVerifier = generators.codeVerifier();
-    codeChallenge = generators.codeChallenge(codeVerifier);
+    cleanupPendingAuth();
+
+    const codeVerifier = generators.codeVerifier();
+    const codeChallenge = generators.codeChallenge(codeVerifier);
+    const state = generators.state();
+
+    pendingAuth.set(state, {codeVerifier, createdAt: Date.now()});
 
     const authUrl = client.authorizationUrl({
         scope: 'openid profile email',
         code_challenge: codeChallenge,
         code_challenge_method: 'S256',
-        state: CLIENT_ID,
+        state,
     });
     res.redirect(authUrl);
 });
 
 app.get('/callback', async (req, res) => {
     try {
+        const {state} = req.query;
+        const pending = state && pendingAuth.get(state);
+        if (!pending) {
+            throw new Error('Unknown or expired login state. Please start the login again from the homepage.');
+        }
+        pendingAuth.delete(state);
+
         const tokenSet = await client.callback(REDIRECT_URI, req.query, {
-            code_verifier: codeVerifier,
-            state: CLIENT_ID,
+            code_verifier: pending.codeVerifier,
+            state,
         });
 
         const claims = tokenSet.claims();

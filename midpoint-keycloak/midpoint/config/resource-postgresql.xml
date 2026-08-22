@@ -3,27 +3,49 @@
          xmlns:q="http://prism.evolveum.com/xml/ns/public/query-3"
          xmlns:icfs="http://midpoint.evolveum.com/xml/ns/public/connector/icf-1/resource-schema-3"
          xmlns:ri="http://midpoint.evolveum.com/xml/ns/public/resource/instance-3"
-         xmlns:icfc="http://midpoint.evolveum.com/xml/ns/public/connector/icf-1/connector-schema-3">
+         xmlns:icfc="http://midpoint.evolveum.com/xml/ns/public/connector/icf-1/connector-schema-3"
+         xmlns:cap="http://midpoint.evolveum.com/xml/ns/public/resource/capabilities-3">
 
     <resource oid="35492bc3-8233-4ed9-b423-09979b6345e3">
         <name>PostgreSQL UserDB</name>
-        <connectorRef oid="db4cd6a1-2117-417a-a5b6-1b5dde5b2c10" type="c:ConnectorType"/>
+        <connectorRef oid="7a536356-0c31-4c10-96a7-b51d81e436aa" type="c:ConnectorType"/>
         <connectorConfiguration>
-            <icfc:configurationProperties xmlns:icscdbtable="http://midpoint.evolveum.com/xml/ns/public/connector/icf-1/bundle/com.evolveum.polygon.connector-databasetable/org.identityconnectors.databasetable.DatabaseTableConnector">
-                <icscdbtable:port>5432</icscdbtable:port>
-                <icscdbtable:host>postgres</icscdbtable:host>
-                <icscdbtable:user>postgres</icscdbtable:user>
-                <icscdbtable:password>
+            <icfc:resultsHandlerConfiguration>
+                <icfc:enableNormalizingResultsHandler>false</icfc:enableNormalizingResultsHandler>
+                <icfc:enableFilteredResultsHandler>true</icfc:enableFilteredResultsHandler>
+                <icfc:filteredResultsHandlerInValidationMode>true</icfc:filteredResultsHandlerInValidationMode>
+                <icfc:enableAttributesToGetSearchResultsHandler>false</icfc:enableAttributesToGetSearchResultsHandler>
+            </icfc:resultsHandlerConfiguration>
+            <icfc:configurationProperties xmlns:icscscriptedsql="http://midpoint.evolveum.com/xml/ns/public/connector/icf-1/bundle/com.evolveum.polygon.connector-scripted-sql/com.evolveum.polygon.connector.scripted.sql.ScriptedSQLConnector">
+                <icscscriptedsql:createScriptFileName>CreateScript.groovy</icscscriptedsql:createScriptFileName>
+                <icscscriptedsql:updateScriptFileName>UpdateScript.groovy</icscscriptedsql:updateScriptFileName>
+                <icscscriptedsql:deleteScriptFileName>DeleteScript.groovy</icscscriptedsql:deleteScriptFileName>
+                <icscscriptedsql:schemaScriptFileName>SchemaScript.groovy</icscscriptedsql:schemaScriptFileName>
+                <icscscriptedsql:searchScriptFileName>SearchScript.groovy</icscscriptedsql:searchScriptFileName>
+                <icscscriptedsql:testScriptFileName>TestScript.groovy</icscscriptedsql:testScriptFileName>
+                <icscscriptedsql:scriptRoots>/opt/midpoint/var/scripts/</icscscriptedsql:scriptRoots>
+                <icscscriptedsql:classpath>.</icscscriptedsql:classpath>
+                <icscscriptedsql:user>postgres</icscscriptedsql:user>
+                <icscscriptedsql:password>
                     <clearValue>adminpassword</clearValue>
-                </icscdbtable:password>
-                <icscdbtable:database>userdb</icscdbtable:database>
-                <icscdbtable:table>users</icscdbtable:table>
-                <icscdbtable:keyColumn>id</icscdbtable:keyColumn>
-                <icscdbtable:passwordColumn>password</icscdbtable:passwordColumn>
-                <icscdbtable:jdbcDriver>org.postgresql.Driver</icscdbtable:jdbcDriver>
-                <icscdbtable:jdbcUrlTemplate>jdbc:postgresql://%h:%p/%d</icscdbtable:jdbcUrlTemplate>
+                </icscscriptedsql:password>
+                <icscscriptedsql:jdbcDriver>org.postgresql.Driver</icscscriptedsql:jdbcDriver>
+                <icscscriptedsql:jdbcUrlTemplate>jdbc:postgresql://postgres:5432/userdb</icscscriptedsql:jdbcUrlTemplate>
             </icfc:configurationProperties>
         </connectorConfiguration>
+        <capabilities>
+            <configured>
+                <cap:create>
+                    <cap:enabled>true</cap:enabled>
+                </cap:create>
+                <cap:update>
+                    <cap:enabled>true</cap:enabled>
+                </cap:update>
+                <cap:delete>
+                    <cap:enabled>true</cap:enabled>
+                </cap:delete>
+            </configured>
+        </capabilities>
         <schemaHandling>
             <objectType>
                 <kind>account</kind>
@@ -61,6 +83,20 @@
                         <source>
                             <path>telephoneNumber</path>
                         </source>
+                    </outbound>
+                </attribute>
+                <attribute>
+                    <ref>ri:roleIds</ref>
+                    <outbound>
+                        <expression>
+                            <script>
+                                <code>
+                                    focus.roleMembershipRef.findAll {
+                                        it.type != null &amp;&amp; it.type.localPart == 'RoleType'
+                                    }.collect { it.oid.replace('-oid', '-id') }
+                                </code>
+                            </script>
+                        </expression>
                     </outbound>
                 </attribute>
                 <credentials>

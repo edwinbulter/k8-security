@@ -1,3 +1,25 @@
+# NOTE: the "midpoint-scriptedsql-scripts" ConfigMap referenced below is NOT
+# defined here. It is generated directly from the Groovy sources in
+# midpoint/scripts/scriptedsql/ via:
+#
+#   kubectl create configmap midpoint-scriptedsql-scripts \
+#     -n midpoint-keycloak \
+#     --from-file=../midpoint/scripts/scriptedsql/ \
+#     --dry-run=client -o yaml | kubectl apply -f -
+#
+# This avoids keeping two copies of the same scripts in sync.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: midpoint-data
+  namespace: midpoint-keycloak
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -13,6 +35,18 @@ spec:
       labels:
         app: midpoint
     spec:
+      initContainers:
+        - name: fetch-scriptedsql-connector
+          image: curlimages/curl:8.8.0
+          command:
+            - sh
+            - -c
+            - |
+              curl -sSL -o /connectors/connector-scripted-sql-2.3.jar \
+                https://nexus.evolveum.com/nexus/repository/releases/com/evolveum/polygon/connector-scripted-sql/2.3/connector-scripted-sql-2.3.jar
+          volumeMounts:
+            - name: icf-connectors
+              mountPath: /connectors
       containers:
         - name: midpoint
           image: evolveum/midpoint:4.8
@@ -36,10 +70,20 @@ spec:
               name: http
           volumeMounts:
             - name: midpoint-data
-              mountPath: /opt/midpoint/data
+              mountPath: /opt/midpoint/var
+            - name: icf-connectors
+              mountPath: /opt/midpoint/var/icf-connectors
+            - name: scriptedsql-scripts
+              mountPath: /opt/midpoint/var/scripts
       volumes:
         - name: midpoint-data
+          persistentVolumeClaim:
+            claimName: midpoint-data
+        - name: icf-connectors
           emptyDir: {}
+        - name: scriptedsql-scripts
+          configMap:
+            name: midpoint-scriptedsql-scripts
 ---
 apiVersion: v1
 kind: Service
